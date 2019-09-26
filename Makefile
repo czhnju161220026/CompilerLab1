@@ -1,6 +1,8 @@
-scanner: lexical
-	gcc main.c lex.yy.c -lfl -o scanner
+scanner: lexical syntax
+	gcc main.c syntax.tab.c -lfl -ly -o parser
 lexical:
 	flex lexical.l
+syntax:
+	bison -d syntax.y
 clean:
-	-rm -f lex.yy.c scanner *.o
+	-rm -f lex.yy.c syntax.tab.* parser *.o
