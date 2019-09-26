@@ -29,7 +29,7 @@
 
 /*定义产生式规则*/
 %%
-Program : ExtDefList
+Program : ExtDefList 
     ;
 ExtDefList : /*empty*/
     | ExtDef ExtDefList

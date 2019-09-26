@@ -45,11 +45,11 @@ MultiLineComment \/\*
 %%
 {OneLineComment} {}
 {MultiLineComment} {discard_comment();} //调用自定义的多行注释处理器
-{Exp_float} {yylval = strof(yytext); return FLOAT;}
-{Float} {yylval = strof(yytext); return FLOAT;}
-{Dec_number} {yylval = atoi(yytext); return INT;}
-{Oct_number} {yylval = atoi(yytext); return INT;}
-{Hex_number} {yylval = atoi(yytext); return INT;}
+{Exp_float} { return FLOAT;}
+{Float} {return FLOAT;}
+{Dec_number} { return INT;}
+{Oct_number} { return INT;}
+{Hex_number} { return INT;}
 {Type} {return TYPE;}
 {Struct} {return STRUCT;}
 {Return} {return RETURN;}
