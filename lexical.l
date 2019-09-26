@@ -1,5 +1,7 @@
 /* flex源文件由3部分构成，用%%分开*/
 %{
+#include <stdlib.h>
+#include "syntax.tab.h"    
 void discard_comment();
 %}
 /*定义部分*/
@@ -41,38 +43,38 @@ MultiLineComment \/\*
 /*规则部分: 定义匹配时采取的动作*/
 /*越靠前优先级越高，匹配时按照贪心的原则进行，所以关键字如int float 应该放在前面*/
 %%
-{OneLineComment} {printf("Line %d: match a oneline comment: %s\n", yylineno, yytext);}
-{MultiLineComment} {discard_comment(); printf("Line %d: match multiline comment: %s\n", yylineno, yytext);} //调用自定义的多行注释处理器
-{Exp_float} {printf("Line %d: match a exp_float: %s\n", yylineno, yytext);}
-{Float} {printf("Line %d: match a float: %s\n", yylineno, yytext);}
-{Dec_number} {printf("Line %d: match a dec number: %s\n", yylineno, yytext);}
-{Oct_number} {printf("Line %d: match an oct number: %s\n", yylineno, yytext);}
-{Hex_number} {printf("Line %d: match a hex number: %s\n", yylineno, yytext);}
-{Type} {printf("Line %d: match a type: %s\n", yylineno, yytext);}
-{Struct} {printf("Line %d: match a struct: %s\n", yylineno, yytext);}
-{Return} {printf("Line %d: match a return: %s\n", yylineno, yytext);}
-{If} {printf("Line %d: match a if: %s\n", yylineno, yytext);}
-{Else} {printf("Line %d: match a else: %s\n", yylineno, yytext);} 
-{While} {printf("Line %d: match a while: %s\n", yylineno, yytext);}
-{ID} {printf("Line %d: match a id: %s\n", yylineno, yytext);}
-{Semi} {printf("Line %d: match a semi: %s\n", yylineno, yytext);}
-{Comma} {printf("Line %d: match a comma: %s\n", yylineno, yytext);}
-{Assign_op} {printf("Line %d: match a assignop: %s\n", yylineno, yytext);}
-{Rel_op} {printf("Line %d: match a relop: %s\n", yylineno, yytext);}
-{Plus} {printf("Line %d: match a plus: %s\n", yylineno, yytext);}
-{Minus} {printf("Line %d: match a minus: %s\n", yylineno, yytext);}
-{Star} {printf("Line %d: match a start: %s\n", yylineno, yytext);}
-{Div} {printf("Line %d: match a div: %s\n", yylineno, yytext);}
-{And} {printf("Line %d: match a and: %s\n", yylineno, yytext);} 
-{Or} {printf("Line %d: match a or: %s\n", yylineno, yytext);} 
-{Dot} {printf("Line %d: match a dot: %s\n", yylineno, yytext);}
-{Not} {printf("Line %d: match a not: %s\n", yylineno, yytext);}
-{Lp} {printf("Line %d: match a lp: %s\n", yylineno, yytext);}
-{Rp} {printf("Line %d: match a rp: %s\n", yylineno, yytext);}
-{Lb} {printf("Line %d: match a lb: %s\n", yylineno, yytext);}
-{Rb} {printf("Line %d: match a rb: %s\n", yylineno, yytext);}
-{Lc} {printf("Line %d: match a lc: %s\n", yylineno, yytext);}
-{Rc} {printf("Line %d: match a rc: %s\n", yylineno, yytext);}
+{OneLineComment} {}
+{MultiLineComment} {discard_comment();} //调用自定义的多行注释处理器
+{Exp_float} {yylval = strof(yytext); return FLOAT;}
+{Float} {yylval = strof(yytext); return FLOAT;}
+{Dec_number} {yylval = atoi(yytext); return INT;}
+{Oct_number} {yylval = atoi(yytext); return INT;}
+{Hex_number} {yylval = atoi(yytext); return INT;}
+{Type} {return TYPE;}
+{Struct} {return STRUCT;}
+{Return} {return RETURN;}
+{If} {return IF;}
+{Else} {return ELSE;} 
+{While} {return WHILE; }
+{ID} {return ID;}
+{Semi} {return SEMI;}
+{Comma} {return COMMA;}
+{Assign_op} {return ASSIGNOP;}
+{Rel_op} {return RELOP;}
+{Plus} {return PLUS;}
+{Minus} {return MINUS;}
+{Star} {return STAR;}
+{Div} {return DIV;}
+{And} {return AND;} 
+{Or} {return OR;} 
+{Dot} {return DOT;}
+{Not} {return NOT;}
+{Lp} {return LP;}
+{Rp} {return RP;}
+{Lb} {return LB;}
+{Rb} {return RB;}
+{Lc} {return LC;}
+{Rc} {return RC;}
 {Blank} {} //忽略空格和tab
 . {printf("Error type A at Line %d: mysterious characters \'%s\' \n", yylineno, yytext);} //对于未定义字符报错处理
 \n {} //添加该规则以启用yylineno

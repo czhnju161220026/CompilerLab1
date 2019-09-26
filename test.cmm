@@ -3,7 +3,7 @@ int test1() // this is a comment.
 	int a = 3;
 	int b = 4 + 5 * a - 1;
 	int t = a || b && 0;
-	int c = a ^ b;
+	int c = a + b;
 	return 0;
 }
 /* this is a comment.*/
