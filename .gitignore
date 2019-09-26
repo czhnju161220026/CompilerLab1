@@ -1,3 +1,4 @@
 *.o
 lex.yy.c
 scanner
+parser
