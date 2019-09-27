@@ -1,7 +1,8 @@
 #include<stdio.h>
-
+#include "grammarTree.h"
 extern void yyrestart(FILE*);
 extern void yyparse(void);
+extern Morpheme* root;
 
 int main(int argc, char** argv) {
     if(argc <= 1) {
@@ -16,6 +17,7 @@ int main(int argc, char** argv) {
         }
         yyrestart(f);
         yyparse();
+        printGrammarTree(root, 0);
         return 0;
     }
 }

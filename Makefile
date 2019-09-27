@@ -1,5 +1,5 @@
 scanner: lexical syntax
-	@gcc main.c syntax.tab.c -lfl -ly -o parser
+	@gcc -std=c99 main.c grammarTree.c syntax.tab.c -lfl -ly -o parser
 lexical:
 	@flex lexical.l
 syntax:
