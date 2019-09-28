@@ -25,7 +25,7 @@ const char *const TYPES_NAME_TABLE[] =
 	"Exp","Args"
 };
 
-char* typeToString(Types type) {
+const char* typeToString(Types type) {
     return TYPES_NAME_TABLE[type];
 }
 

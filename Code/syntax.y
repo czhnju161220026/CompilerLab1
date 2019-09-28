@@ -8,7 +8,7 @@ Morpheme* root = NULL;
 #ifndef YYSTYPE
 #define YYSTYPE Morpheme*
 #endif
-
+void yyerror(const char *s);
 %}
 /*定义类型*/
 
