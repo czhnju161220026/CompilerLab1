@@ -5,6 +5,7 @@
 #ifndef __TREE_H_
 #define __TREE_H_
 #define MAX_CHILDREN_NUMBER 8
+
 extern const char *const TYPES_NAME_TABLE[];
 
 typedef enum Types
@@ -44,11 +45,13 @@ typedef struct Morpheme {
     };
     int lineNumber;
     struct Morpheme* father;
-    struct Morpheme* children[MAX_CHILDREN_NUMBER];
-    
+    //struct Morpheme* children[MAX_CHILDREN_NUMBER];
+	struct Morpheme* child;
+    struct Morpheme* siblings;
 }Morpheme;
 
 Morpheme* createMorpheme(Types type);
 void nodeGrowth(Morpheme* father, int n, ...);
 void printGrammarTree(Morpheme* root, int depth);
+void destructMorpheme(Morpheme* morpheme);
 #endif

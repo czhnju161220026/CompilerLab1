@@ -25,29 +25,66 @@ const char *const TYPES_NAME_TABLE[] =
 	"Exp","Args"
 };
 
+char* typeToString(Types type) {
+    return TYPES_NAME_TABLE[type];
+}
+
 Morpheme* createMorpheme(Types type) {
     Morpheme* morpheme = (Morpheme*) malloc(sizeof(Morpheme));
     if (morpheme == NULL) {
         printf("Memory alloc error\n");
         exit(0);
     }
-
+    
     morpheme->type = type;
     morpheme->father = NULL;
+    morpheme->child = NULL;
+    morpheme->siblings = NULL;
     morpheme->lineNumber = -1;
-    for (int i = 0; i < MAX_CHILDREN_NUMBER; i++) {
+    /*for (int i = 0; i < MAX_CHILDREN_NUMBER; i++) {
         morpheme->children[i] = NULL;
-    }
+    }*/
 
     return morpheme;
 }
 
-void addChild(Morpheme* father, Morpheme* child, int i) {
-    if (i >= MAX_CHILDREN_NUMBER) {
-        printf("max children number overflow\n");
+void destructMorpheme(Morpheme* morpheme) {
+    if (morpheme == NULL) {
+        return;
     }
 
-    father->children[i] = child;
+    int i = 0;
+    Morpheme* m = morpheme->child;
+    while (m != NULL) {
+        destructMorpheme(m);
+        m = m->siblings;
+    }
+    /*while (i < MAX_CHILDREN_NUMBER && morpheme->children[i] != NULL) {
+        destructMorpheme(morpheme->children[i]);
+        i++;
+    }*/
+    if (morpheme->type == _RELOP || morpheme->type == _ID || morpheme->type == _TYPE) {
+        free(morpheme->idName);
+    }
+    //printf("%s\n", typeToString(morpheme->type));
+    free(morpheme);
+}
+
+void addChild(Morpheme* father, Morpheme* child) {
+    /*if (i >= MAX_CHILDREN_NUMBER) {
+        printf("max children number overflow\n");
+    }*/
+    if (father->child == NULL) {
+        father->child = child;
+    } else {
+        Morpheme* c = father->child;
+        while (c->siblings != NULL) {
+            c = c->siblings;
+        }
+        c->siblings = child;
+    }
+
+    //father->children[i] = child;
     child->father = father;
     Morpheme* f= father;
     if (child->lineNumber != -1) {
@@ -58,21 +95,16 @@ void addChild(Morpheme* father, Morpheme* child, int i) {
     }
 }
 
-void eliminateEmpty(Morpheme* root) {
-    ;
-}
 
 void nodeGrowth(Morpheme* father, int n, ...) {
     va_list argp;
     va_start(argp,n);
     for (int i = 0; i < n; i++) {
-        addChild(father, va_arg(argp, Morpheme*), i);
+        addChild(father, va_arg(argp, Morpheme*));
     }
 }
 
-char* typeToString(Types type) {
-    return TYPES_NAME_TABLE[type];
-}
+
 
 void printGrammarTree(Morpheme* root, int depth) {
     //printf("in\n");
@@ -103,10 +135,15 @@ void printGrammarTree(Morpheme* root, int depth) {
         }
     
         int i = 0;
-        while (i < MAX_CHILDREN_NUMBER && root->children[i] != NULL) {
+        Morpheme* c = root->child;
+        while (c != NULL) {
+            printGrammarTree(c, depth + 1);
+            c = c->siblings;
+        }
+        /*while (i < MAX_CHILDREN_NUMBER && root->children[i] != NULL) {
             printGrammarTree(root->children[i], depth + 1);
             i++;
-        }
+        }*/
     }
     
     //printf("out %d\n", i);
