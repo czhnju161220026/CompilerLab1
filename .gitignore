@@ -1,5 +1,4 @@
-*.o
-lex.yy.c
-scanner
-parser
-syntax.tab.*
+Code/*.o
+Code/lex.yy.c
+Code/parser
+Code/syntax.tab.*
