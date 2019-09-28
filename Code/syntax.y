@@ -89,7 +89,7 @@ StmtList : /*empty*/    {$$=createMorpheme(_StmtList); nodeGrowth($$, 1, createM
 Stmt : Exp SEMI {$$=createMorpheme(_Stmt); nodeGrowth($$, 2, $1, $2);}
     | CompSt    {$$=createMorpheme(_Stmt); nodeGrowth($$, 1, $1);}
     | RETURN Exp SEMI   {$$=createMorpheme(_Stmt); nodeGrowth($$, 3, $1, $2, $3);}
-    | IF LP Exp RP Stmt {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, $5);}
+    | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, $5);}
     | IF LP Exp RP Stmt ELSE Stmt   {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, $3, $4, $5, $6, $7);}
     | WHILE LP Exp RP Stmt  {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, $5);}
     ;
