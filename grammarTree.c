@@ -25,13 +25,17 @@ const char *const TYPES_NAME_TABLE[] =
 	"Exp","Args"
 };
 
+char* typeToString(Types type) {
+    return TYPES_NAME_TABLE[type];
+}
+
 Morpheme* createMorpheme(Types type) {
     Morpheme* morpheme = (Morpheme*) malloc(sizeof(Morpheme));
     if (morpheme == NULL) {
         printf("Memory alloc error\n");
         exit(0);
     }
-
+    
     morpheme->type = type;
     morpheme->father = NULL;
     morpheme->lineNumber = -1;
@@ -40,6 +44,23 @@ Morpheme* createMorpheme(Types type) {
     }
 
     return morpheme;
+}
+
+void destructMorpheme(Morpheme* morpheme) {
+    if (morpheme == NULL) {
+        return;
+    }
+
+    int i = 0;
+    while (i < MAX_CHILDREN_NUMBER && morpheme->children[i] != NULL) {
+        destructMorpheme(morpheme->children[i]);
+        i++;
+    }
+    if (morpheme->type == _RELOP || morpheme->type == _ID || morpheme->type == _TYPE) {
+        free(morpheme->idName);
+    }
+    //printf("%s\n", typeToString(morpheme->type));
+    free(morpheme);
 }
 
 void addChild(Morpheme* father, Morpheme* child, int i) {
@@ -58,9 +79,6 @@ void addChild(Morpheme* father, Morpheme* child, int i) {
     }
 }
 
-void eliminateEmpty(Morpheme* root) {
-    ;
-}
 
 void nodeGrowth(Morpheme* father, int n, ...) {
     va_list argp;
@@ -70,9 +88,7 @@ void nodeGrowth(Morpheme* father, int n, ...) {
     }
 }
 
-char* typeToString(Types type) {
-    return TYPES_NAME_TABLE[type];
-}
+
 
 void printGrammarTree(Morpheme* root, int depth) {
     //printf("in\n");

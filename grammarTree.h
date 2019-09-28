@@ -51,4 +51,5 @@ typedef struct Morpheme {
 Morpheme* createMorpheme(Types type);
 void nodeGrowth(Morpheme* father, int n, ...);
 void printGrammarTree(Morpheme* root, int depth);
+void destructMorpheme(Morpheme* morpheme);
 #endif

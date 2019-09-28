@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
         yyrestart(f);
         yyparse();
         printGrammarTree(root, 0);
+        destructMorpheme(root);
         return 0;
     }
 }
