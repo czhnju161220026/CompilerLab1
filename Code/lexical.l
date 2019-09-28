@@ -14,11 +14,11 @@
 /*定义部分*/
 /*Flex采用最长规则进行匹配*/
 %option yylineno
-Exp_float [+-]?(([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))([eE][+-]?[0-9]+)
-Float [+-]?([0-9]+\.[0-9]+)
-Dec_number [+-]?(([1-9][0-9]*)|0) 
-Oct_number [+-]?0[0-7]+
-Hex_number [+-]?0[Xx][0-9a-fA-F]+
+Exp_float (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))([eE][+-]?[0-9]+)
+Float ([0-9]+\.[0-9]+)
+Dec_number (([1-9][0-9]*)|0) 
+Oct_number 0[0-7]+
+Hex_number 0[Xx][0-9a-fA-F]+
 Type (int)|(float)
 Struct struct
 Return return
