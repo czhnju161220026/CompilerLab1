@@ -13,8 +13,9 @@
 %}
 /*定义部分*/
 /*Flex采用最长规则进行匹配*/
+/*注释识别和指数浮点数的识别不属于我们的选作范围，所以将其注释*/
 %option yylineno
-Exp_float (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))([eE][+-]?[0-9]+)
+/*Exp_float (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))([eE][+-]?[0-9]+)*/
 Float ([0-9]+\.[0-9]+)
 Dec_number (([1-9][0-9]*)|0) 
 Oct_number 0[0-7]+
@@ -45,15 +46,15 @@ Rb \]
 Lc \{
 Rc \}
 Blank [ \r\t]+
-OneLineComment \/\/[^\n]*
-MultiLineComment \/\* 
+/*OneLineComment \/\/[^\n]* */
+/*MultiLineComment \/\*  */
 /*规则部分: 定义匹配时采取的动作*/
 /*越靠前优先级越高，匹配时按照贪心的原则进行，所以关键字如int float 应该放在前面*/
+/*{OneLineComment} {if(__DEBUG_) printf("Line %d: match a OneLineComment\n", yylineno, yytext);}*/
+/*{MultiLineComment} {discard_comment(); if(__DEBUG_) printf("Line %d: match a MultiLineComment\n", yylineno, yytext);} */
+/*{Exp_float} {if (__DEBUG_) printf("Line %d: match a float: %s\n", yylineno, yytext);*/
+    /*yylval=createMorpheme(_FLOAT); yylval->lineNumber = yylineno; yylval->floatValue = strtof(yytext,NULL);return FLOAT;}*/
 %%
-{OneLineComment} {if(__DEBUG_) printf("Line %d: match a OneLineComment\n", yylineno, yytext);}
-{MultiLineComment} {discard_comment(); if(__DEBUG_) printf("Line %d: match a MultiLineComment\n", yylineno, yytext);}
-{Exp_float} {if (__DEBUG_) printf("Line %d: match a float: %s\n", yylineno, yytext);
-    yylval=createMorpheme(_FLOAT); yylval->lineNumber = yylineno; yylval->floatValue = strtof(yytext,NULL);return FLOAT;}
 {Float} {if (__DEBUG_) printf("Line %d: match a float: %s\n", yylineno, yytext);
     yylval=createMorpheme(_FLOAT); yylval->lineNumber = yylineno; yylval->floatValue = strtof(yytext,NULL);return FLOAT;}
 {Dec_number} {if (__DEBUG_) printf("Line %d: match a dec number: %s\n", yylineno, yytext); 
@@ -119,12 +120,10 @@ MultiLineComment \/\*
 . {printf("Error type A at Line %d: mysterious characters \'%s\' \n", yylineno, yytext);} //对于未定义字符报错处理
 \n {} //添加该规则以启用yylineno
 
-
-
 %%
 /*用户自定义代码*/
 //丢弃多行注释
-void discard_comment() {
+/*void discard_comment() {
     char c1, c2;
     while(1) {
         c1 = input();
@@ -134,5 +133,5 @@ void discard_comment() {
             break;
         }
     }
-}
+}*/
 /* SLT ADD A COMMENT */
