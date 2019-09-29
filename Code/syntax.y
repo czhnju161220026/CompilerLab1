@@ -8,7 +8,13 @@ Morpheme* root = NULL;
 #ifndef YYSTYPE
 #define YYSTYPE Morpheme*
 #endif
+#define ERROR_NODE createMorpheme(_BLANK)
 void yyerror(const char *s);
+void my_yyerror(const char* msg);
+
+int error_line = -1;
+int syntax_correct = 1;
+
 %}
 /*定义类型*/
 
@@ -49,12 +55,13 @@ void yyerror(const char *s);
 %%
 Program : ExtDefList {$$=createMorpheme(_Program);nodeGrowth($$,1,$1);root=$$;}
     ;
-ExtDefList : /*empty*/ {$$=createMorpheme(_ExtDefList);nodeGrowth($$,1,createMorpheme(_BLANK));}
+ExtDefList : /*empty*/ {$$=createMorpheme(_ExtDefList);nodeGrowth($$,1,ERROR_NODE);}
     | ExtDef ExtDefList {$$=createMorpheme(_ExtDefList);nodeGrowth($$, 2, $1, $2);}
     ;
 ExtDef : Specifier ExtDecList SEMI {$$=createMorpheme(_ExtDef);nodeGrowth($$, 3, $1, $2, $3);}
     | Specifier SEMI   {$$=createMorpheme(_ExtDef); nodeGrowth($$, 2, $1, $2);}
     | Specifier FunDec CompSt   {$$=createMorpheme(_ExtDef); nodeGrowth($$, 3, $1, $2, $3);}
+    | Specifier error SEMI {$$=createMorpheme(_ExtDef); nodeGrowth($$, 3, $1, ERROR_NODE, $3);error_line = $2->lineNumber; my_yyerror("error 1");}
     ;
 ExtDecList : VarDec {$$=createMorpheme(_ExtDecList); nodeGrowth($$, 1, $1);}
     | VarDec COMMA ExtDecList   {$$=createMorpheme(_ExtDecList); nodeGrowth($$, 3, $1, $2, $3);}
@@ -65,7 +72,7 @@ Specifier : TYPE    {$$=createMorpheme(_Specifier); nodeGrowth($$, 1, $1);}
 StructSpecifier : STRUCT OptTag LC DefList RC   {$$=createMorpheme(_StructSpecifier); nodeGrowth($$, 5, $1, $2, $3, $4, $5);}
     | STRUCT Tag    {$$=createMorpheme(_StructSpecifier); nodeGrowth($$, 2, $1, $2);}
     ;
-OptTag : /*empty*/  {$$=createMorpheme(_OptTag); nodeGrowth($$, 1, createMorpheme(_BLANK));}
+OptTag : /*empty*/  {$$=createMorpheme(_OptTag); nodeGrowth($$, 1, ERROR_NODE);}
     | ID    {$$=createMorpheme(_OptTag); nodeGrowth($$, 1, $1);}
     ;
 Tag : ID    {$$=createMorpheme(_Tag); nodeGrowth($$, 1, $1);}
@@ -75,34 +82,53 @@ VarDec : ID {$$=createMorpheme(_VarDec); nodeGrowth($$, 1, $1);}
     ;
 FunDec : ID LP VarList RP   {$$=createMorpheme(_FunDec); nodeGrowth($$, 4, $1, $2, $3, $4);}
     | ID LP RP  {$$=createMorpheme(_FunDec); nodeGrowth($$, 3, $1, $2, $3);}
+    | ID LP error RP {$$=createMorpheme(_FunDec); nodeGrowth($$, 4, $1, $2, ERROR_NODE, $4); error_line = $3->lineNumber; my_yyerror("error 2");}
+    | ID error RP {$$=createMorpheme(_FunDec); nodeGrowth($$, 3, $1, ERROR_NODE, $3); error_line = $2->lineNumber; my_yyerror("error 3");}
     ;
 VarList : ParamDec COMMA VarList    {$$=createMorpheme(_VarList); nodeGrowth($$, 3, $1, $2, $3);}
     | ParamDec  {$$=createMorpheme(_VarList); nodeGrowth($$, 1, $1);}
+    | error COMMA VarList {$$=createMorpheme(_VarList); nodeGrowth($$, 3, ERROR_NODE, $2, $3); error_line = $1->lineNumber; my_yyerror("error 4");}
     ;
 ParamDec : Specifier VarDec {$$=createMorpheme(_ParamDec); nodeGrowth($$, 2, $1, $2);}
     ;
 CompSt : LC DefList StmtList RC {$$=createMorpheme(_CompSt); nodeGrowth($$, 4, $1, $2, $3, $4);}
+    | error RC {$$=createMorpheme(_CompSt); nodeGrowth($$, 2, ERROR_NODE, $2); error_line = $1->lineNumber; my_yyerror("error 5");}
     ;
-StmtList : /*empty*/    {$$=createMorpheme(_StmtList); nodeGrowth($$, 1, createMorpheme(_BLANK));}
+StmtList : /*empty*/    {$$=createMorpheme(_StmtList); nodeGrowth($$, 1, ERROR_NODE);}
     | Stmt StmtList {$$=createMorpheme(_StmtList); nodeGrowth($$, 2, $1, $2);}
     ;
 Stmt : Exp SEMI {$$=createMorpheme(_Stmt); nodeGrowth($$, 2, $1, $2);}
+    | error SEMI {$$=createMorpheme(_Stmt); nodeGrowth($$, 2, ERROR_NODE, $2); error_line = $1->lineNumber; my_yyerror("error 6");}
     | CompSt    {$$=createMorpheme(_Stmt); nodeGrowth($$, 1, $1);}
     | RETURN Exp SEMI   {$$=createMorpheme(_Stmt); nodeGrowth($$, 3, $1, $2, $3);}
+    | RETURN error SEMI {$$=createMorpheme(_Stmt); nodeGrowth($$, 3, $1, ERROR_NODE, $3); error_line = $2->lineNumber; my_yyerror("error 7");}
+
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, $5);}
+    | IF LP error RP Stmt %prec LOWER_THAN_ELSE {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, ERROR_NODE, $4, $5); error_line = $3->lineNumber; my_yyerror("error 8");}
+    | IF LP Exp RP error %prec LOWER_THAN_ELSE {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, ERROR_NODE); error_line = $5->lineNumber; my_yyerror("error 9");}
+   
     | IF LP Exp RP Stmt ELSE Stmt   {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, $3, $4, $5, $6, $7);}
+    | IF LP error RP Stmt ELSE Stmt {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, ERROR_NODE, $4, $5, $6, $7); error_line = $3->lineNumber; my_yyerror("error 10");}
+    | IF LP Exp RP error ELSE Stmt {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, $3, $4, ERROR_NODE, $6, $7); error_line = $5->lineNumber; my_yyerror("error 11");}
+    | IF LP Exp RP Stmt ELSE error {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, $3, $4, $5, $6, ERROR_NODE); error_line = $7->lineNumber; my_yyerror("error 12");}
+
     | WHILE LP Exp RP Stmt  {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, $5);}
+    | WHILE LP error RP Stmt {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, ERROR_NODE, $4, $5); error_line = $3->lineNumber; my_yyerror("error 13");}
+    | WHILE LP Exp RP error {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, ERROR_NODE); error_line = $5->lineNumber; my_yyerror("error 14");}
     ;
-DefList : /*empty*/ {$$=createMorpheme(_DefList); nodeGrowth($$, 1, createMorpheme(_BLANK));}
+DefList : /*empty*/ {$$=createMorpheme(_DefList); nodeGrowth($$, 1, ERROR_NODE);}
     | Def DefList   {$$=createMorpheme(_DefList); nodeGrowth($$, 2, $1, $2);}
     ;
 Def : Specifier DecList SEMI    {$$=createMorpheme(_Def); nodeGrowth($$, 3, $1, $2, $3);}
+    | Specifier error SEMI {$$=createMorpheme(_Def); nodeGrowth($$, 3, $1, ERROR_NODE, $3); error_line = $2->lineNumber; my_yyerror("error 15");}
     ;
 DecList : Dec   {$$=createMorpheme(_DefList); nodeGrowth($$, 1, $1);}
     | Dec COMMA DecList {$$=createMorpheme(_DefList); nodeGrowth($$, 3, $1, $2, $3);}
+    | error COMMA DecList {$$=createMorpheme(_DefList); nodeGrowth($$, 3, ERROR_NODE, $2, $3); error_line = $1->lineNumber; my_yyerror("error 16");}
     ;
 Dec : VarDec    {$$=createMorpheme(_Dec); nodeGrowth($$, 1, $1);}
     | VarDec ASSIGNOP Exp   {$$=createMorpheme(_Dec); nodeGrowth($$, 3, $1, $2, $3);}
+    | error ASSIGNOP Exp {$$=createMorpheme(_Dec); nodeGrowth($$, 3, ERROR_NODE, $2, $3); error_line = $1->lineNumber; my_yyerror("error 17");}
     ;
 Exp : Exp ASSIGNOP Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
     | Exp AND Exp   {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
@@ -122,6 +148,12 @@ Exp : Exp ASSIGNOP Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);
     | ID    {$$=createMorpheme(_Exp); nodeGrowth($$, 1, $1);}
     | INT   {$$=createMorpheme(_Exp); nodeGrowth($$, 1, $1);}
     | FLOAT {$$=createMorpheme(_Exp); nodeGrowth($$, 1, $1);}
+
+    | error RP {$$=createMorpheme(_Exp); nodeGrowth($$, 2, ERROR_NODE, $2); error_line = $1->lineNumber; my_yyerror("error 18");}
+    | LP error {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("error 19");}
+    | Exp LB error RB {$$=createMorpheme(_Exp); nodeGrowth($$, 4, $1, $2, ERROR_NODE, $4); error_line = $3->lineNumber; my_yyerror("error 20");}
+    | ID error RP {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, ERROR_NODE, $3); error_line = $2->lineNumber; my_yyerror("error 21");}
+    | ID LP error {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, ERROR_NODE); error_line = $3->lineNumber; my_yyerror("error 22");}
     ;
 Args : Exp COMMA Args   {$$=createMorpheme(_Args); nodeGrowth($$, 3, $1, $2, $3);}
     | Exp   {$$=createMorpheme(_Args); nodeGrowth($$, 1, $1);}
@@ -129,3 +161,12 @@ Args : Exp COMMA Args   {$$=createMorpheme(_Args); nodeGrowth($$, 3, $1, $2, $3)
 
 %%
 
+void  yyerror(const char* msg) {
+    //printf("Errir type B at line %d : %s\n", error_line, msg);
+    ;//do nothing
+}
+
+void my_yyerror(const char* msg) {
+    printf("Error type B at line %d : %s\n", error_line, msg);
+    syntax_correct = 0;
+}
