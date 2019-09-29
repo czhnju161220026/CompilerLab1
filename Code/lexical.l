@@ -7,26 +7,22 @@
 #define YYSTYPE Morpheme*
 #include "syntax.tab.h"  
 #ifndef __DEBUG_ 
-#define __DEBUG_ true
+#define __DEBUG_ 0
 #endif
 /*void discard_comment();*/
+int is_split_char(char c);
 %}
 /*定义部分*/
 /*Flex采用最长规则进行匹配*/
 /*注释识别和指数浮点数的识别不属于我们的选作范围，所以将其注释*/
 %option yylineno
-/*Exp_float (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))([eE][+-]?[0-9]+)*/
+/*Exp_float (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))([eE][+-]?[0-9]+)*/ 
 Float ([0-9]+\.[0-9]+)
 Dec_number (([1-9][0-9]*)|0) 
 Oct_number 0[0-7]+
 Hex_number 0[Xx][0-9a-fA-F]+
-Type (int)|(float)
-Struct struct
-Return return
-If if
-Else else
-While while
 ID [_a-zA-Z][_a-zA-Z0-9]*
+Illegal_ID [0-9]+[_a-zA-Z]+[_a-zA-Z0-9]*
 Semi ;
 Comma ,
 Assign_op =
@@ -55,6 +51,12 @@ Blank [ \r\t]+
 /*{Exp_float} {if (__DEBUG_) printf("Line %d: match a float: %s\n", yylineno, yytext);*/
     /*yylval=createMorpheme(_FLOAT); yylval->lineNumber = yylineno; yylval->floatValue = strtof(yytext,NULL);return FLOAT;}*/
 %%
+{Illegal_ID} {if(__DEBUG_) printf("Line %d: match a illegal id: %s\n", yylineno, yytext); 
+    printf("Error type A at Line %d: illegal Id \'%s\' .\n", yylineno, yytext);
+    yylval=createMorpheme(_ID); yylval->lineNumber = yylineno;
+    yylval->idName=strcpy((char*)malloc(sizeof(char)*(strlen(yytext)+1)), yytext);
+    return ID;
+}
 {Float} {if (__DEBUG_) printf("Line %d: match a float: %s\n", yylineno, yytext);
     yylval=createMorpheme(_FLOAT); yylval->lineNumber = yylineno; yylval->floatValue = strtof(yytext,NULL);return FLOAT;}
 {Dec_number} {if (__DEBUG_) printf("Line %d: match a dec number: %s\n", yylineno, yytext); 
@@ -63,22 +65,45 @@ Blank [ \r\t]+
     yylval=createMorpheme(_INT); yylval->lineNumber = yylineno;yylval->intValue = strtol(yytext, NULL, 8);return INT;}
 {Hex_number} {if (__DEBUG_)  printf("Line %d: match a hex number: %s\n", yylineno, yytext);
     yylval=createMorpheme(_INT); yylval->lineNumber = yylineno;yylval->intValue = strtol(yytext, NULL, 16);return INT;}
-{Type} {if (__DEBUG_) printf("Line %d: match a type: %s\n", yylineno, yytext);
-    yylval=createMorpheme(_TYPE); yylval->lineNumber = yylineno;
-    yylval->idName=strcpy((char*)malloc(sizeof(char)*(strlen(yytext)+1)), yytext);return TYPE;}
-{Struct} {if (__DEBUG_) printf("Line %d: match a struct: %s\n", yylineno, yytext);
-    yylval=createMorpheme(_STRUCT); yylval->lineNumber = yylineno;return STRUCT;}
-{Return} {if (__DEBUG_) printf("Line %d: match a return: %s\n", yylineno, yytext);
-    yylval=createMorpheme(_RETURN); yylval->lineNumber = yylineno;return RETURN;}
-{If} {if (__DEBUG_) printf("Line %d: match a if: %s\n", yylineno, yytext);
-    yylval=createMorpheme(_IF); yylval->lineNumber = yylineno;return IF;}
-{Else} {if (__DEBUG_) printf("Line %d: match a else: %s\n", yylineno, yytext);
-    yylval=createMorpheme(_ELSE); yylval->lineNumber = yylineno;return ELSE;} 
-{While} {if (__DEBUG_) printf("Line %d: match a while: %s\n", yylineno, yytext);
-    yylval=createMorpheme(_WHILE); yylval->lineNumber = yylineno;return WHILE; }
-{ID} {if (__DEBUG_) printf("Line %d: match a id: %s\n", yylineno, yytext);
-    yylval=createMorpheme(_ID); yylval->lineNumber = yylineno;
-    yylval->idName=strcpy((char*)malloc(sizeof(char)*(strlen(yytext)+1)), yytext);return ID;}
+{ID} {
+    if(strcmp("int", yytext) == 0 || strcmp("float", yytext) == 0) {
+        if (__DEBUG_) printf("Line %d: match a type: %s\n", yylineno, yytext);
+        yylval=createMorpheme(_TYPE); yylval->lineNumber = yylineno;
+        yylval->idName=strcpy((char*)malloc(sizeof(char)*(strlen(yytext)+1)), yytext);
+        return TYPE;
+    }
+    else if(strcmp("struct", yytext) == 0) {
+        if (__DEBUG_) printf("Line %d: match a struct: %s\n", yylineno, yytext);
+        yylval=createMorpheme(_STRUCT); yylval->lineNumber = yylineno;
+        return STRUCT;
+    }
+    else if(strcmp("return", yytext) == 0) {
+        if (__DEBUG_) printf("Line %d: match a return: %s\n", yylineno, yytext);
+        yylval=createMorpheme(_RETURN); yylval->lineNumber = yylineno;
+        return RETURN;
+    }
+    else if(strcmp("if", yytext) == 0) {
+        if (__DEBUG_) printf("Line %d: match a if: %s\n", yylineno, yytext);
+        yylval=createMorpheme(_IF); yylval->lineNumber = yylineno;
+        return IF;
+    }
+    else if(strcmp("else", yytext) == 0) {
+        if (__DEBUG_) printf("Line %d: match a else: %s\n", yylineno, yytext);
+        yylval=createMorpheme(_ELSE); yylval->lineNumber = yylineno;
+        return ELSE;
+    }
+    else if(strcmp("while", yytext) == 0) {
+        if (__DEBUG_) printf("Line %d: match a while: %s\n", yylineno, yytext);
+        yylval=createMorpheme(_WHILE); yylval->lineNumber = yylineno;
+        return WHILE;
+    }
+    else {
+        if (__DEBUG_) printf("Line %d: match a id: %s\n", yylineno, yytext);
+        yylval=createMorpheme(_ID); yylval->lineNumber = yylineno;
+        yylval->idName=strcpy((char*)malloc(sizeof(char)*(strlen(yytext)+1)), yytext);
+        return ID;
+    }
+}
 {Semi} {if (__DEBUG_) printf("Line %d: match a semi: %s\n", yylineno, yytext);
     yylval=createMorpheme(_SEMI); yylval->lineNumber = yylineno;return SEMI;}
 {Comma} {if (__DEBUG_) printf("Line %d: match a comma: %s\n", yylineno, yytext);
@@ -134,4 +159,20 @@ Blank [ \r\t]+
         }
     }
 }*/
+/*
+int is_split_char(char c) {
+     if(c!=' ' && c != '\t' && c != '\n' && c != ';' && c != ',') {
+         return 0;
+     }
+     return 1;
+}
+
+int is_operator(char c) {
+    if(c != '+' && c != '-' && c != '*' && c != '/' && c != '>' && c != '<' && c != '=') {
+        return 0;
+    }
+    return 1;
+}
+*/
+
 /* SLT ADD A COMMENT */
