@@ -17,12 +17,14 @@ int is_split_char(char c);
 /*注释识别和指数浮点数的识别不属于我们的选作范围，所以将其注释*/
 %option yylineno
 /*Exp_float (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))([eE][+-]?[0-9]+)*/ 
+/*把ID的标准放宽松，识别出后再判断是否合法*/
 Float ([0-9]+\.[0-9]+)
 Dec_number (([1-9][0-9]*)|0) 
 Oct_number 0[0-7]+
+Illegal_Oct 0[0-7]*[89]+[0-9]*
 Hex_number 0[Xx][0-9a-fA-F]+
-ID [_a-zA-Z][_a-zA-Z0-9]*
-Illegal_ID [0-9]+[_a-zA-Z]+[_a-zA-Z0-9]*
+Illegal_Hex 0[Xx][0-9a-fA-F]*[g-zG-Z]+[0-9a-zA-Z]*
+ID [_a-zA-Z0-9]+
 Semi ;
 Comma ,
 Assign_op =
@@ -51,22 +53,30 @@ Blank [ \r\t]+
 /*{Exp_float} {if (__DEBUG_) printf("Line %d: match a float: %s\n", yylineno, yytext);*/
     /*yylval=createMorpheme(_FLOAT); yylval->lineNumber = yylineno; yylval->floatValue = strtof(yytext,NULL);return FLOAT;}*/
 %%
-{Illegal_ID} {if(__DEBUG_) printf("Line %d: match a illegal id: %s\n", yylineno, yytext); 
-    printf("Error type A at Line %d: illegal Id \'%s\' .\n", yylineno, yytext);
-    yylval=createMorpheme(_ID); yylval->lineNumber = yylineno;
-    yylval->idName=strcpy((char*)malloc(sizeof(char)*(strlen(yytext)+1)), yytext);
-    return ID;
-}
 {Float} {if (__DEBUG_) printf("Line %d: match a float: %s\n", yylineno, yytext);
     yylval=createMorpheme(_FLOAT); yylval->lineNumber = yylineno; yylval->floatValue = strtof(yytext,NULL);return FLOAT;}
 {Dec_number} {if (__DEBUG_) printf("Line %d: match a dec number: %s\n", yylineno, yytext); 
     yylval=createMorpheme(_INT); yylval->lineNumber = yylineno; yylval->intValue = strtol(yytext, NULL, 10); return INT;}
+{Illegal_Oct} {if (__DEBUG_)  printf("Line %d: match an illegal oct number: %s\n", yylineno, yytext);
+    printf("Error type A at Line %d: Illegal oct number \'%s\' \n", yylineno, yytext);
+    yylval=createMorpheme(_INT); yylval->lineNumber = yylineno;yylval->intValue = 0;return INT;
+}
 {Oct_number} {if (__DEBUG_)  printf("Line %d: match an oct number: %s\n", yylineno, yytext);
     yylval=createMorpheme(_INT); yylval->lineNumber = yylineno;yylval->intValue = strtol(yytext, NULL, 8);return INT;}
+{Illegal_Hex} {if (__DEBUG_)  printf("Line %d: match an illegal hex number: %s\n", yylineno, yytext);
+    printf("Error type A at Line %d: Illegal hex number \'%s\' \n", yylineno, yytext);
+    yylval=createMorpheme(_INT); yylval->lineNumber = yylineno;yylval->intValue = 0;return INT;
+}
 {Hex_number} {if (__DEBUG_)  printf("Line %d: match a hex number: %s\n", yylineno, yytext);
     yylval=createMorpheme(_INT); yylval->lineNumber = yylineno;yylval->intValue = strtol(yytext, NULL, 16);return INT;}
 {ID} {
-    if(strcmp("int", yytext) == 0 || strcmp("float", yytext) == 0) {
+    if(yytext[0] >='0' && yytext[0] <= '9') {
+        printf("Error type A at Line %d: Illegal id \'%s\' \n", yylineno, yytext);
+        yylval=createMorpheme(_ID); yylval->lineNumber = yylineno;
+        yylval->idName=strcpy((char*)malloc(sizeof(char)*(strlen(yytext)+1)), yytext);
+        return ID; //不影响语法分析，仍然返回一个ID token
+    }
+    else if(strcmp("int", yytext) == 0 || strcmp("float", yytext) == 0) {
         if (__DEBUG_) printf("Line %d: match a type: %s\n", yylineno, yytext);
         yylval=createMorpheme(_TYPE); yylval->lineNumber = yylineno;
         yylval->idName=strcpy((char*)malloc(sizeof(char)*(strlen(yytext)+1)), yytext);
