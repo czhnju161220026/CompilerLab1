@@ -1,4 +1,4 @@
-truct Application {
+struct Application {
 	int id;
 	float name;
 	int destination;

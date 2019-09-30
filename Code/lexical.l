@@ -11,6 +11,7 @@
 #endif
 /*void discard_comment();*/
 int is_split_char(char c);
+int lexical_correct = 1; 
 %}
 /*定义部分*/
 /*Flex采用最长规则进行匹配*/
@@ -59,12 +60,14 @@ Blank [ \r\t]+
     yylval=createMorpheme(_INT); yylval->lineNumber = yylineno; yylval->intValue = strtol(yytext, NULL, 10); return INT;}
 {Illegal_Oct} {if (__DEBUG_)  printf("Line %d: match an illegal oct number: %s\n", yylineno, yytext);
     printf("Error type A at Line %d: Illegal oct number \'%s\' \n", yylineno, yytext);
+    lexical_correct = 0;
     yylval=createMorpheme(_INT); yylval->lineNumber = yylineno;yylval->intValue = 0;return INT;
 }
 {Oct_number} {if (__DEBUG_)  printf("Line %d: match an oct number: %s\n", yylineno, yytext);
     yylval=createMorpheme(_INT); yylval->lineNumber = yylineno;yylval->intValue = strtol(yytext, NULL, 8);return INT;}
 {Illegal_Hex} {if (__DEBUG_)  printf("Line %d: match an illegal hex number: %s\n", yylineno, yytext);
     printf("Error type A at Line %d: Illegal hex number \'%s\' \n", yylineno, yytext);
+    lexical_correct = 0;
     yylval=createMorpheme(_INT); yylval->lineNumber = yylineno;yylval->intValue = 0;return INT;
 }
 {Hex_number} {if (__DEBUG_)  printf("Line %d: match a hex number: %s\n", yylineno, yytext);
@@ -72,6 +75,7 @@ Blank [ \r\t]+
 {ID} {
     if(yytext[0] >='0' && yytext[0] <= '9') {
         printf("Error type A at Line %d: Illegal id \'%s\' \n", yylineno, yytext);
+        lexical_correct = 0;
         yylval=createMorpheme(_ID); yylval->lineNumber = yylineno;
         yylval->idName=strcpy((char*)malloc(sizeof(char)*(strlen(yytext)+1)), yytext);
         return ID; //不影响语法分析，仍然返回一个ID token

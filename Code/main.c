@@ -4,6 +4,7 @@ extern void yyrestart(FILE*);
 extern void yyparse(void);
 extern Morpheme* root;
 extern int syntax_correct;
+extern int lexical_correct;
 
 int main(int argc, char** argv) {
     if(argc <= 1) {
@@ -18,7 +19,8 @@ int main(int argc, char** argv) {
         }
         yyrestart(f);
         yyparse();
-        if(syntax_correct) printGrammarTree(root, 0);
+        if(syntax_correct && lexical_correct) 
+            printGrammarTree(root, 0);
         destructMorpheme(root);
         return 0;
     }
