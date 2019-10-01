@@ -1,4 +1,4 @@
-struct Test7_a {
+  struct Test7_a {
 	int a;
 	float b;
 };

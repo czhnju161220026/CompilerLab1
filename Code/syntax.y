@@ -167,7 +167,7 @@ Exp : Exp ASSIGNOP Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);
     | NOT error {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("something wrong with your expression");}
     | error RP {$$=createMorpheme(_Exp); nodeGrowth($$, 2, ERROR_NODE, $2); error_line = $1->lineNumber; my_yyerror("missing \'(\'");}
     | LP error {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("missing \')\'");}
-    //| Exp LB error RB {$$=createMorpheme(_Exp); nodeGrowth($$, 4, $1, $2, ERROR_NODE, $4); error_line = $3->lineNumber; my_yyerror("something wrong between \'[]\'");}
+    | Exp LB error RB {$$=createMorpheme(_Exp); nodeGrowth($$, 4, $1, $2, ERROR_NODE, $4); error_line = $3->lineNumber; my_yyerror("something wrong between \'[]\'");}
     | error LB Exp RB {$$=createMorpheme(_Exp); nodeGrowth($$, 4, ERROR_NODE, $2, $3, $4); error_line = $1->lineNumber; my_yyerror("expression definition error");}
     | ID error  {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("something wrong with your expression");}
     | ID LP error {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, ERROR_NODE); error_line = $3->lineNumber; my_yyerror("missing \')\'");}

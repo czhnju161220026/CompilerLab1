@@ -19,8 +19,7 @@ int main() {
 	while(k < 10) {
 		while(i < 10) {
 			while(j < 10) {
-				if(dis[i][k] + dis[k][j] < dis[i][j]) 
-				{
+				if(dis[i][k] + dis[k][j] < dis[i][j]) {
 					dis[i][j] = dis[i][k.] + dis[k][j];
 				}
 				j = j + 1;
