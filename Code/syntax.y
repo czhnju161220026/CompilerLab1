@@ -13,6 +13,7 @@ void yyerror(const char *s);
 void my_yyerror(const char* msg);
 
 int error_line = -1;
+int pre_error_line = -1;
 int syntax_correct = 1;
 
 %}
@@ -99,20 +100,20 @@ StmtList : /*empty*/    {$$=createMorpheme(_StmtList); nodeGrowth($$, 1, ERROR_N
     | Stmt StmtList {$$=createMorpheme(_StmtList); nodeGrowth($$, 2, $1, $2);}
     ;
 Stmt : Exp SEMI {$$=createMorpheme(_Stmt); nodeGrowth($$, 2, $1, $2);}
-    | Exp error {$$=createMorpheme(_Stmt); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; printf("missing \';\'");}
+    | Exp error {$$=createMorpheme(_Stmt); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("missing \';\'");}
     | error SEMI {$$=createMorpheme(_Stmt); nodeGrowth($$, 2, ERROR_NODE, $2); error_line = $1->lineNumber; my_yyerror("something wrong with your expression");}
     | CompSt    {$$=createMorpheme(_Stmt); nodeGrowth($$, 1, $1);}
     | RETURN Exp SEMI   {$$=createMorpheme(_Stmt); nodeGrowth($$, 3, $1, $2, $3);}
     | RETURN Exp error  {$$=createMorpheme(_Stmt); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("missing \';\'");} 
 
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, $5);}
-    | IF LP error RP Stmt %prec LOWER_THAN_ELSE {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, ERROR_NODE, $4, $5); error_line = $3->lineNumber; my_yyerror("error 8");}
-    | IF LP Exp RP error %prec LOWER_THAN_ELSE {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, ERROR_NODE); error_line = $5->lineNumber; my_yyerror("error 9");}
+    | IF LP error RP Stmt %prec LOWER_THAN_ELSE {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, ERROR_NODE, $4, $5); error_line = $3->lineNumber; my_yyerror("something wrong with your expression");}
+    | IF LP Exp RP error %prec LOWER_THAN_ELSE {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, ERROR_NODE); error_line = $5->lineNumber; my_yyerror("something wrong with your expression");}
    
     | IF LP Exp RP Stmt ELSE Stmt   {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, $3, $4, $5, $6, $7);}
-    | IF LP error RP Stmt ELSE Stmt {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, ERROR_NODE, $4, $5, $6, $7); error_line = $3->lineNumber; my_yyerror("error 10");}
-    | IF LP Exp RP error ELSE Stmt {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, $3, $4, ERROR_NODE, $6, $7); error_line = $5->lineNumber; my_yyerror("error 11");}
-    | IF LP Exp RP Stmt ELSE error {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, $3, $4, $5, $6, ERROR_NODE); error_line = $7->lineNumber; my_yyerror("error 12");}
+    | IF LP error RP Stmt ELSE Stmt {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, ERROR_NODE, $4, $5, $6, $7); error_line = $3->lineNumber; my_yyerror("something wrong with your expression");}
+    | IF LP Exp RP error ELSE Stmt {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, $3, $4, ERROR_NODE, $6, $7); error_line = $5->lineNumber; my_yyerror("something wrong with your expression");}
+    | IF LP Exp RP Stmt ELSE error {$$=createMorpheme(_Stmt); nodeGrowth($$, 7, $1, $2, $3, $4, $5, $6, ERROR_NODE); error_line = $7->lineNumber; my_yyerror("something wrong with your expression");}
 
     | WHILE LP Exp RP Stmt  {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, $3, $4, $5);}
     | WHILE LP error RP Stmt {$$=createMorpheme(_Stmt); nodeGrowth($$, 5, $1, $2, ERROR_NODE, $4, $5); error_line = $3->lineNumber; my_yyerror("error 13");}
@@ -123,6 +124,7 @@ DefList : /*empty*/ {$$=createMorpheme(_DefList); nodeGrowth($$, 1, ERROR_NODE);
     ;
 Def : Specifier DecList SEMI    {$$=createMorpheme(_Def); nodeGrowth($$, 3, $1, $2, $3);}
     | Specifier error SEMI {$$=createMorpheme(_Def); nodeGrowth($$, 3, $1, ERROR_NODE, $3); error_line = $2->lineNumber; my_yyerror("declarators definition error.");}
+    | error SEMI {$$=createMorpheme(_Def); nodeGrowth($$, 2, ERROR_NODE, $2); error_line = $1->lineNumber; my_yyerror("definition error.");}
     ;
 DecList : Dec   {$$=createMorpheme(_DefList); nodeGrowth($$, 1, $1);}
     | Dec COMMA DecList {$$=createMorpheme(_DefList); nodeGrowth($$, 3, $1, $2, $3);}
@@ -140,6 +142,8 @@ Exp : Exp ASSIGNOP Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);
     | Exp MINUS Exp {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
     | Exp STAR Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
     | Exp DIV Exp   {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
+    | Exp PLUS PLUS {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("cmm does not support operator \'++\'.");}
+    | Exp MINUS MINUS {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("cmm does not support operator \'--\'.");}
     | LP Exp RP {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
     | MINUS Exp {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, $2);}
     | NOT Exp   {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, $2);}
@@ -163,9 +167,9 @@ Exp : Exp ASSIGNOP Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);
     | NOT error {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("something wrong with your expression");}
     | error RP {$$=createMorpheme(_Exp); nodeGrowth($$, 2, ERROR_NODE, $2); error_line = $1->lineNumber; my_yyerror("missing \'(\'");}
     | LP error {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("missing \')\'");}
-    | Exp LB error RB {$$=createMorpheme(_Exp); nodeGrowth($$, 4, $1, $2, ERROR_NODE, $4); error_line = $3->lineNumber; my_yyerror("something wrong between \'[]\'");}
+    //| Exp LB error RB {$$=createMorpheme(_Exp); nodeGrowth($$, 4, $1, $2, ERROR_NODE, $4); error_line = $3->lineNumber; my_yyerror("something wrong between \'[]\'");}
     | error LB Exp RB {$$=createMorpheme(_Exp); nodeGrowth($$, 4, ERROR_NODE, $2, $3, $4); error_line = $1->lineNumber; my_yyerror("expression definition error");}
-    | ID error RP {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, ERROR_NODE, $3); error_line = $2->lineNumber; my_yyerror("missing \'(\'");}
+    | ID error  {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("something wrong with your expression");}
     | ID LP error {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, ERROR_NODE); error_line = $3->lineNumber; my_yyerror("missing \')\'");}
     ;
 Args : Exp COMMA Args   {$$=createMorpheme(_Args); nodeGrowth($$, 3, $1, $2, $3);}
@@ -180,6 +184,10 @@ void  yyerror(const char* msg) {
 }
 
 void my_yyerror(const char* msg) {
+    if(error_line == pre_error_line) {
+        return;
+    }
     printf("Error type B at line %d : %s\n", error_line, msg);
+    pre_error_line = error_line;
     syntax_correct = 0;
 }
