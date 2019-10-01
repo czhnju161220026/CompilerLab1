@@ -142,8 +142,6 @@ Exp : Exp ASSIGNOP Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);
     | Exp MINUS Exp {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
     | Exp STAR Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
     | Exp DIV Exp   {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
-    | Exp PLUS PLUS {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("cmm does not support operator \'++\'.");}
-    | Exp MINUS MINUS {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, ERROR_NODE); error_line = $2->lineNumber; my_yyerror("cmm does not support operator \'--\'.");}
     | LP Exp RP {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
     | MINUS Exp {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, $2);}
     | NOT Exp   {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, $2);}
