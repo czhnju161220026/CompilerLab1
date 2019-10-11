@@ -126,9 +126,9 @@ Def : Specifier DecList SEMI    {$$=createMorpheme(_Def); nodeGrowth($$, 3, $1, 
     | Specifier error SEMI {$$=createMorpheme(_Def); nodeGrowth($$, 3, $1, ERROR_NODE, $3); error_line = $2->lineNumber; my_yyerror("declarators definition error.");}
     | error SEMI {$$=createMorpheme(_Def); nodeGrowth($$, 2, ERROR_NODE, $2); error_line = $1->lineNumber; my_yyerror("definition error.");}
     ;
-DecList : Dec   {$$=createMorpheme(_DefList); nodeGrowth($$, 1, $1);}
-    | Dec COMMA DecList {$$=createMorpheme(_DefList); nodeGrowth($$, 3, $1, $2, $3);}
-    | error COMMA DecList {$$=createMorpheme(_DefList); nodeGrowth($$, 3, ERROR_NODE, $2, $3); error_line = $1->lineNumber; my_yyerror("error 16");}
+DecList : Dec   {$$=createMorpheme(_DecList); nodeGrowth($$, 1, $1);}
+    | Dec COMMA DecList {$$=createMorpheme(_DecList); nodeGrowth($$, 3, $1, $2, $3);}
+    | error COMMA DecList {$$=createMorpheme(_DecList); nodeGrowth($$, 3, ERROR_NODE, $2, $3); error_line = $1->lineNumber; my_yyerror("error 16");}
     ;
 Dec : VarDec    {$$=createMorpheme(_Dec); nodeGrowth($$, 1, $1);}
     | VarDec ASSIGNOP Exp   {$$=createMorpheme(_Dec); nodeGrowth($$, 3, $1, $2, $3);}
