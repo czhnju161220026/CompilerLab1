@@ -48,7 +48,7 @@ int syntax_correct = 1;
 %left RELOP
 %left PLUS MINUS
 %left STAR DIV
-%right NOT NEG
+%right NOT 
 %left DOT LP RP LB RB
 
 
@@ -143,7 +143,7 @@ Exp : Exp ASSIGNOP Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);
     | Exp STAR Exp  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
     | Exp DIV Exp   {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
     | LP Exp RP {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
-    | MINUS Exp %prec NEG{$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, $2);}
+    | MINUS Exp {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, $2);}
     | NOT Exp   {$$=createMorpheme(_Exp); nodeGrowth($$, 2, $1, $2);}
     | ID LP Args RP {$$=createMorpheme(_Exp); nodeGrowth($$, 4, $1, $2, $3, $4);}
     | ID LP RP  {$$=createMorpheme(_Exp); nodeGrowth($$, 3, $1, $2, $3);}
